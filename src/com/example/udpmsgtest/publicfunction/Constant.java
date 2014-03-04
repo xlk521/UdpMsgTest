@@ -80,7 +80,7 @@ public class Constant {
 	public final static boolean IS_APK_FROM_WEB = true;
 	
 	//WIFI或3服务器地址
-    public static String BASE_IP = "192.168.42.187";//"114.255.140.194";//"10.130.127.4";//"61.232.48.26";//"115.29.172.156";//济南服务器IP为："61.232.48.26";
+    public static String BASE_IP = "192.168.1.111";//"114.255.140.194";//"10.130.127.4";//"61.232.48.26";//"115.29.172.156";//济南服务器IP为："61.232.48.26";
     public static String IPFROMSETTING = "ip_from_setting";
     
     public static final String BASE_PORT = "8086";

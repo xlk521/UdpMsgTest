@@ -72,7 +72,7 @@ public class TestService extends Service{
 		//初始化udp socket，绑定到特定的套接字地址
 		try {
 			datagramSocket = new DatagramSocket(socketAddress);
-			String message = "xlk";
+			String message = "xlk111111";
 			try {
 				//建立远程服务器地址
 				InetAddress address = (InetAddress)InetAddress.getByName(Constant.BASE_IP);

@@ -5,7 +5,9 @@ import java.io.UnsupportedEncodingException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -30,6 +32,7 @@ import android.view.Menu;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 @SuppressLint("ShowToast")
@@ -37,32 +40,140 @@ public class MainActivity extends Activity {
 
 	private String tag = "MainActivity";
 	private Button button = null;
+	private EditText text = null;
 	//UDP
 	private WifiManager.MulticastLock lock;
 	private WifiManager manager;
 	public static final int androidPort = 8088;
 	public static final int ServicePort = 8088;
 	private PublicFunctions pubFun = null;
-	private String host = "192.168.42.25";//服务器端的ip地址
+	private String host = "192.168.1.111";//服务器端的ip地址
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
+		manager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+        lock= manager.createMulticastLock("lockwifi");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
 		button = (Button)this.findViewById(R.id.button1);
+		text = (EditText)this.findViewById(R.id.text);
 		button.setOnClickListener(new OnClickListener() {
 			
 			@Override
 			public void onClick(View v) {
-//				Intent intent = new Intent(getApplicationContext(),TestService.class);
-				Intent intent = new Intent(getApplicationContext(),MessageSendService.class);
-				String sendStr = "{'upload_data':{'DeptCode':'JNK','GroupName':'济京五组','devno':'COM1','recvdatetime':'2014-03-03 14:41:33','tpa':'13964183328','msg':'CGSF+2073+梁山(0)，现在车内0人。测试，济京五组列车长张冬梅','smid':'1','sign':'0','mmsfilesid':'','smstype':'S','BureauName':'济南铁路局','BureauCode':'K','E_ID':'济南客运段','Deptname':'88024'},'DeptCode':'JNK','flag':'SB'}";
-				intent.putExtra("smsMessage", sendStr);
-				intent.putExtra("messageType", JSONKey.LINGDAOJIANCHA);
-				intent.putExtra("saveDBStr", "tipStr");
-				startService(intent);
+////				Intent intent = new Intent(getApplicationContext(),TestService.class);
+//				Intent intent = new Intent(getApplicationContext(),MessageSendService.class);
+//				String sendStr = "{'upload_data':{'DeptCode':'JNK','GroupName':'济京五组','devno':'COM1','recvdatetime':'2014-03-03 14:41:33','tpa':'13964183328','msg':'CGSF+2073+梁山(0)，现在车内0人。测试，济京五组列车长张冬梅','smid':'1','sign':'0','mmsfilesid':'','smstype':'S','BureauName':'济南铁路局','BureauCode':'K','E_ID':'济南客运段','Deptname':'88024'},'DeptCode':'JNK','flag':'SB'}";
+//				intent.putExtra("smsMessage", sendStr);
+//				intent.putExtra("messageType", JSONKey.LINGDAOJIANCHA);
+//				intent.putExtra("saveDBStr", "tipStr");
+//				startService(intent);
+//				UdpMain();
+//				UdpTest();
+//				send("123321");
+				
+				new Thread(runnable).start();
 			}
 		});
+	}
+	Handler handler2 = new Handler(){
+	    @Override
+	    public void handleMessage(Message msg) {
+	        super.handleMessage(msg);
+	        Bundle data = msg.getData();
+	        String val = data.getString("value");
+	        Log.e("mylog","请求结果-->" + val);
+	    }
+	};
+
+	Runnable runnable = new Runnable(){
+	    @Override
+	    public void run() {
+	        //
+	        // TODO: http request.
+	        //
+	    	String textStr = "xlk123";
+	    	textStr = text.getText().toString();
+	    	if (textStr == null) {
+				textStr = "text";
+			}
+	    	send(textStr);
+	        Message msg = new Message();
+	        Bundle data = new Bundle();
+	        data.putString("value","请求结果!");
+	        msg.setData(data);
+	        handler2.sendMessage(msg);
+	    }
+	};
+	public static void send(String message){  
+        message = (message == null ? "Hello IdeasAndroid!" : message);  
+        int server_port = 8088;  
+        DatagramSocket s = null;  
+        try {
+            s = new DatagramSocket();
+        } catch (SocketException e) {
+            e.printStackTrace();
+        }
+        InetAddress local = null;
+        try {
+            // 换成服务器端IP  
+            local = InetAddress.getByName("192.168.1.111"); 
+        } catch (UnknownHostException e) {  
+            e.printStackTrace();  
+        }  
+        int msg_length = message.length();
+        byte[] messageByte;
+//		try {
+			messageByte = message.getBytes();
+			DatagramPacket p = new DatagramPacket(messageByte, msg_length, local, server_port);  
+	        try {
+	            s.send(p);
+	        } catch (IOException e) {
+	            e.printStackTrace();
+	        }
+//		} catch (UnsupportedEncodingException e1) {
+//			e1.printStackTrace();
+//		}
+    } 
+	public void UdpMain() {
+	    try {
+	      //创建发送方的套接字，IP默认为本地，端口号随机
+	      DatagramSocket sendSocket = new DatagramSocket();
+	      
+	      //确定要发送的消息：
+	      String mes = "hello xlk1111";
+	      
+	      //由于数据报的数据是以字符数组传的形式存储的，所以传转数据
+	      byte[] buf = mes.getBytes();
+	      
+	      //确定发送方的IP地址及端口号，地址为本地机器地址
+	      int port = 8000;
+	      InetAddress ip = InetAddress.getByName("192.168.1.111");//InetAddress.getLocalHost();
+	      
+	      //创建发送类型的数据报：
+	      DatagramPacket sendPacket = new DatagramPacket(buf,buf.length,ip,port);
+	      
+	      //通过套接字发送数据：
+	      sendSocket.send(sendPacket);
+	      
+	      //确定接受反馈数据的缓冲存储器，即存储数据的字节数组
+	      byte[] getBuf = new byte[1024];
+	      
+	      //创建接受类型的数据报
+	      DatagramPacket getPacket = new DatagramPacket(getBuf,getBuf.length);
+	      
+	      //通过套接字接受数据
+	      sendSocket.receive(getPacket);
+	      
+	      //解析反馈的消息，并打印
+	      String backMes = new String(getBuf,0,getPacket.getLength());
+	      System.out.println("接受方返回的消息："+backMes);
+	      
+	      //关闭套接字
+	      sendSocket.close();
+	    } catch (Exception e) {
+	      e.printStackTrace();
+	    }
 	}
 
 	/*author:DerekXie

@@ -120,7 +120,6 @@ public class MessageSendService extends Service {
 				}
 			}
 		}).start();
-		
 	}
 
 	@Override
