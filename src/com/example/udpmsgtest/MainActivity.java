@@ -14,10 +14,14 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.Arrays;
 
+import com.example.udpmsgtest.publicfunction.Constant;
 import com.example.udpmsgtest.publicfunction.JSONKey;
 import com.example.udpmsgtest.publicfunction.PublicFunctions;
+import com.example.udpmsgtest.publicfunction.Tools;
+import com.example.udpmsgtest.publicfunction.UdpConstant;
 import com.example.udpmsgtest.service.MessageSendService;
 import com.example.udpmsgtest.service.TestService;
+import com.example.udpmsgtest.service.UdpService;
 
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
@@ -36,7 +40,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 @SuppressLint("ShowToast")
-public class MainActivity extends Activity {
+public class MainActivity extends BaseActivity {
 
 	private String tag = "MainActivity";
 	private Button button = null;
@@ -50,8 +54,8 @@ public class MainActivity extends Activity {
 	private String host = "192.168.1.111";//服务器端的ip地址
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		manager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
-        lock= manager.createMulticastLock("lockwifi");
+//		manager = (WifiManager) this.getSystemService(Context.WIFI_SERVICE);
+//        lock= manager.createMulticastLock("lockwifi");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
@@ -61,18 +65,19 @@ public class MainActivity extends Activity {
 			
 			@Override
 			public void onClick(View v) {
-////				Intent intent = new Intent(getApplicationContext(),TestService.class);
-//				Intent intent = new Intent(getApplicationContext(),MessageSendService.class);
-//				String sendStr = "{'upload_data':{'DeptCode':'JNK','GroupName':'济京五组','devno':'COM1','recvdatetime':'2014-03-03 14:41:33','tpa':'13964183328','msg':'CGSF+2073+梁山(0)，现在车内0人。测试，济京五组列车长张冬梅','smid':'1','sign':'0','mmsfilesid':'','smstype':'S','BureauName':'济南铁路局','BureauCode':'K','E_ID':'济南客运段','Deptname':'88024'},'DeptCode':'JNK','flag':'SB'}";
-//				intent.putExtra("smsMessage", sendStr);
-//				intent.putExtra("messageType", JSONKey.LINGDAOJIANCHA);
-//				intent.putExtra("saveDBStr", "tipStr");
-//				startService(intent);
-//				UdpMain();
-//				UdpTest();
-//				send("123321");
-				
-				new Thread(runnable).start();
+//				if (lock.isHeld()) {
+//					lock.release();
+//				}
+//				new Thread(runnable).start();//等到线程的主要功能运行结束后，需要结束进程
+				showProgress("正在发送数据··· ···");
+				String textStr = text.getText().toString();
+				Intent intent = new Intent();
+				intent.setClass(getApplicationContext(), UdpService.class);
+				intent.putExtra(UdpConstant.SbMsg, textStr);
+				intent.putExtra(UdpConstant.SbMsgType, UdpConstant.SbType);
+				intent.putExtra(UdpConstant.SbSaveDbStr, textStr);
+				intent.putExtra(UdpConstant.SbIsNeedSave, 0);
+				startService(intent);
 			}
 		});
 	}
@@ -83,6 +88,7 @@ public class MainActivity extends Activity {
 	        Bundle data = msg.getData();
 	        String val = data.getString("value");
 	        Log.e("mylog","请求结果-->" + val);
+	        
 	    }
 	};
 
@@ -90,14 +96,15 @@ public class MainActivity extends Activity {
 	    @Override
 	    public void run() {
 	        //
-	        // TODO: http request.
+	        // 通过UDP协议发送数据，并且显示发送结果
 	        //
 	    	String textStr = "xlk123";
 	    	textStr = text.getText().toString();
 	    	if (textStr == null) {
 				textStr = "text";
 			}
-	    	send(textStr);
+	    	String newStr = "Derek+"+textStr+"+Xie";
+	    	send(newStr);
 	        Message msg = new Message();
 	        Bundle data = new Bundle();
 	        data.putString("value","请求结果!");
@@ -105,166 +112,88 @@ public class MainActivity extends Activity {
 	        handler2.sendMessage(msg);
 	    }
 	};
-	public static void send(String message){  
-        message = (message == null ? "Hello IdeasAndroid!" : message);  
-        int server_port = 8088;  
-        DatagramSocket s = null;  
-        try {
-            s = new DatagramSocket();
-        } catch (SocketException e) {
-            e.printStackTrace();
-        }
+	/*author:DerekXie
+	 * 函数定义：按照UDP协议发送数据
+	 * 参数含义：
+	 * message：所需要发送的文字信息
+	 * 
+	 * */
+	public void send(String message){
+		//------------------------------------------------------------------------------//
+        message = (message == null ? "Hello IdeasAndroid!" : message);
+        int server_port = 8088;
+        PublicFunctions pubFun = new PublicFunctions();
+        String IP = pubFun.getIp();//获取手机当前的ip
+		if(IP == null){
+			return;
+		}
+		DatagramSocket s = null;
+		InetSocketAddress socketAddress = new InetSocketAddress(IP, Constant.UDP_CLIENT_PORT); // 绑定本地发送端口
+		try {
+			s = new DatagramSocket(socketAddress);
+		} catch (SocketException e) {
+			e.printStackTrace();
+		}
         InetAddress local = null;
         try {
-            // 换成服务器端IP  
-            local = InetAddress.getByName("192.168.1.111"); 
-        } catch (UnknownHostException e) {  
-            e.printStackTrace();  
-        }  
+            // 换成服务器端IP
+            local = InetAddress.getByName("192.168.1.111");
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
         int msg_length = message.length();
         byte[] messageByte;
-//		try {
-			messageByte = message.getBytes();
-			DatagramPacket p = new DatagramPacket(messageByte, msg_length, local, server_port);  
+		try {
+			messageByte = message.getBytes("UTF-8");
+			DatagramPacket p = new DatagramPacket(messageByte, messageByte.length, local, server_port);
 	        try {
+	        	lock.acquire();
 	            s.send(p);
+	            reseveMsg(s);
+	            lock.release();
+	            s.close();
 	        } catch (IOException e) {
 	            e.printStackTrace();
 	        }
-//		} catch (UnsupportedEncodingException e1) {
-//			e1.printStackTrace();
-//		}
-    } 
-	public void UdpMain() {
-	    try {
-	      //创建发送方的套接字，IP默认为本地，端口号随机
-	      DatagramSocket sendSocket = new DatagramSocket();
-	      
-	      //确定要发送的消息：
-	      String mes = "hello xlk1111";
-	      
-	      //由于数据报的数据是以字符数组传的形式存储的，所以传转数据
-	      byte[] buf = mes.getBytes();
-	      
-	      //确定发送方的IP地址及端口号，地址为本地机器地址
-	      int port = 8000;
-	      InetAddress ip = InetAddress.getByName("192.168.1.111");//InetAddress.getLocalHost();
-	      
-	      //创建发送类型的数据报：
-	      DatagramPacket sendPacket = new DatagramPacket(buf,buf.length,ip,port);
-	      
-	      //通过套接字发送数据：
-	      sendSocket.send(sendPacket);
-	      
-	      //确定接受反馈数据的缓冲存储器，即存储数据的字节数组
-	      byte[] getBuf = new byte[1024];
-	      
-	      //创建接受类型的数据报
-	      DatagramPacket getPacket = new DatagramPacket(getBuf,getBuf.length);
-	      
-	      //通过套接字接受数据
-	      sendSocket.receive(getPacket);
-	      
-	      //解析反馈的消息，并打印
-	      String backMes = new String(getBuf,0,getPacket.getLength());
-	      System.out.println("接受方返回的消息："+backMes);
-	      
-	      //关闭套接字
-	      sendSocket.close();
-	    } catch (Exception e) {
-	      e.printStackTrace();
-	    }
-	}
-
+		} catch (UnsupportedEncodingException e1) {
+			e1.printStackTrace();
+		}
+    }
 	/*author:DerekXie
+	 * 函数定义：接收服务端通过UDP协议返回的信息
 	 * 参数含义：
-	 * 
+	 * datagramSocket：发送数据时设置的与服务端所建立的连接
 	 * 
 	 * */
-	public void UdpTest(){
-		//udp网络通讯及线程
-		DatagramSocket datagramSocket = null;
-		//获取当前的ip
-		String ip = pubFun.getIp();
-		Toast.makeText(this, "ip="+pubFun.getIp(), 2000).show();
-		if (ip == null) {
-			return;
-		}
-		//建立特定的套接字地址
-		InetSocketAddress socketAddress = new InetSocketAddress(ip,androidPort);
-		Toast.makeText(this, "01", 2000).show();
-		//初始化udp socket，绑定到特定的套接字地址
-		try {
-			datagramSocket = new DatagramSocket(socketAddress);
-			String message = "xlk";
-			try {
-				//建立远程服务器地址
-				Inet4Address address = (Inet4Address)Inet4Address.getByName(host);
-				Toast.makeText(this, "01", 2000).show();
-				//创建数据包
-				byte[] data;
-				try {
-					Log.i(tag, "UdpTest;message:"+message);
-					data = message.getBytes("UTF-8");
-					DatagramPacket packet = new DatagramPacket(data, data.length, address, ServicePort);
-					//申请广播开启  
-					lock.acquire();
-					//发送数据包
-					Log.i(tag, "UdpTest;sending;");
-					Toast.makeText(this, "UdpTest;sending;", 2000).show();
-					datagramSocket.send(packet);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			} catch (UnknownHostException e) {
-				e.printStackTrace();
-			}
-			
-			// 接收数据handler (线程)
-			reseveMsg(datagramSocket);
-			lock.release();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
 	public void reseveMsg(final DatagramSocket datagramSocket){
-		Thread thread = new Thread(new Runnable() {
-		    @Override
-		    public void run() {
-		    	byte[] buf_recv; // receive buffer
-		        buf_recv = new byte[1024];
-		        while (true) {
-		            try {
-		                DatagramPacket pack = new DatagramPacket(buf_recv,buf_recv.length);
-		                Message msg = new Message();
-		                msg.what = 1;//Constants.RECV_DATA; // 消息id
-		                datagramSocket.receive(pack); // 接收消息
-		                CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder(); // gb2312
-		                msg.obj = decoder.decode(ByteBuffer.wrap(buf_recv)).toString();  // 转换的字符串附加到消息上
-		                Log.i(tag, "UdpTest;msg.obj:"+msg.obj);
-		                
-		                Toast.makeText(MainActivity.this, "UdpTest;msg.obj:"+msg.obj, 2000).show();
-		                handler.sendMessage(msg); // 发送消息
-		                Arrays.fill(buf_recv, (byte) 0); // 清零
-		            } catch (IOException e) {
-		                Toast.makeText(MainActivity.this, e.getMessage(), 0).show();
-		            }
-		        }
-		    }
-		});
+    	byte[] buf_recv;
+        buf_recv = new byte[1024];
+        try {
+            DatagramPacket pack = new DatagramPacket(buf_recv,buf_recv.length);
+            datagramSocket.receive(pack); // 接收消息
+            byte[] packData = pack.getData();//获取接收到的数据
+            String strMsg=new String(packData).trim();
+            Log.i(tag, "UdpTest;msg.obj:"+strMsg);
+            Message msg = new Message();
+            msg.what = 1;
+            msg.obj = strMsg;
+            handler.sendMessage(msg);
+            Arrays.fill(buf_recv, (byte) 0); // 清零
+        } catch (IOException e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), 0).show();
+        }
 	}
 	Handler handler = new Handler() {
 		@Override
 	    public void handleMessage(Message msg) {
 	        switch (msg.what) {
 	        case 1:
-	            Toast.makeText(MainActivity.this, "rece data:" + (String) msg.obj, 2000).show(); // 展示接收到的字符串
+	            Toast.makeText(getApplicationContext(), "数据发送成功:" + (String) msg.obj, 2000).show(); // 展示接收到的字符串
 	            break;
 	        default:
-	        	Toast.makeText(MainActivity.this, "rece data:?", 2000).show(); // 展示接收到的字符串
+	        	Toast.makeText(getApplicationContext(), "rece data:?", 2000).show(); // 展示接收到的字符串
 	            break;
 	        }
-
 	        super.handleMessage(msg);
 	    }
 	};

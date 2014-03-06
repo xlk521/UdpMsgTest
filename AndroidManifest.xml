@@ -48,6 +48,7 @@
         
         <!-- udp 信息发送 -->
         <service android:name="com.example.udpmsgtest.service.TestService" ></service>
+        <service android:name="com.example.udpmsgtest.service.UdpService" ></service>
     </application>
 
 </manifest>
