@@ -10,15 +10,18 @@ import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 
+import com.example.udpmsgtest.BaseActivity;
 import com.example.udpmsgtest.MainActivity;
 import com.example.udpmsgtest.publicfunction.Constant;
 import com.example.udpmsgtest.publicfunction.PublicFunctions;
 import com.example.udpmsgtest.publicfunction.UdpConstant;
 
+import android.app.ProgressDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiManager;
+import android.os.Binder;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -28,11 +31,13 @@ import android.widget.Toast;
 
 public class UdpService extends Service{
 
+	public ProgressDialog progressDialog = null;
 	//UDP
 	private WifiManager.MulticastLock lock;
 	private WifiManager manager;
 	private String tag = "UdpService";
-	
+	private final IBinder binder = new UdpBinder();
+	private int biaozhi = -10;
 	@Override
 	public void onCreate() {
 		//设置设备UDP功能的功能锁
@@ -49,30 +54,55 @@ public class UdpService extends Service{
 		}
 		//接收传入的数据
 		Intent getIntent = intent;
-		String msg = getIntent.getStringExtra(UdpConstant.SbMsg);
-		String msgType = getIntent.getStringExtra(UdpConstant.SbMsgType);
-		String dbSaveMsg = getIntent.getStringExtra(UdpConstant.SbSaveDbStr);
-		Boolean needSave = false;
-		
-		if (msgType != null && msgType.equalsIgnoreCase(UdpConstant.SbType)) {
-			int isSaveState = getIntent.getIntExtra(UdpConstant.SbIsNeedSave, 0);
-			if (isSaveState == 1) {
-				needSave = true;
+		if (getIntent != null) {
+			String msg = getIntent.getStringExtra(UdpConstant.SbMsg);
+			String msgType = getIntent.getStringExtra(UdpConstant.SbMsgType);
+			String dbSaveMsg = getIntent.getStringExtra(UdpConstant.SbSaveDbStr);
+			Boolean needSave = false;
+			
+			if (msgType != null && msgType.equalsIgnoreCase(UdpConstant.SbType)) {
+				int isSaveState = getIntent.getIntExtra(UdpConstant.SbIsNeedSave, 0);
+				if (isSaveState == 1) {
+					needSave = true;
+				}
 			}
+			//发送数据到服务器
+			sendThread(0 ,msg, needSave, msgType, dbSaveMsg);
+		}else{
+			Log.i(tag, "UdpService;onStart;intent is null;");
 		}
-		//发送数据到服务器
-		sendThread(0 ,msg, needSave, msgType, dbSaveMsg);
 	}
 
-	@Override
-	public IBinder onBind(Intent arg0) {
-		return null;
-	}
-	
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
 	}
+	
+    public class UdpBinder extends Binder {
+    	public UdpService getService() {
+            return UdpService.this;
+        }
+    }
+  
+    public IBinder onBind(Intent intent) {
+        return binder;
+    }
+	/*@author：DerekXie
+	 * 函数定义：返回当前的数据标识，biaozhi是用于判断接收服务器端数据的情况
+	 * 参数定义：无参数
+	 * */
+	public int getBiaoZhi(){
+		return biaozhi;
+	}
+	/*@author：DerekXie
+	 * 函数定义：获取当前的数据标识，biaozhi是用于判断接收服务器端数据的情况
+	 * 参数定义：无参数
+	 * */
+	public void setBiaoZhi(int num){
+		Log.i(tag, "biaozhi=num="+num);
+		biaozhi = num;
+	}
+	
 	/*@author：DerekXie
 	 * 函数定义：通过线程发送数据
 	 * 参数定义：
@@ -115,6 +145,7 @@ public class UdpService extends Service{
 		if(IP == null){
 			return;
 		}
+		Log.i("IP", "IP="+IP);
 		DatagramSocket s = null;
 		InetSocketAddress socketAddress = new InetSocketAddress(IP, Constant.UDP_CLIENT_PORT); // 绑定本地发送端口
 		try {
@@ -184,26 +215,39 @@ public class UdpService extends Service{
             handler.sendMessage(msg);
         }
 	}
+	
 	Handler handler = new Handler() {
 		@Override
 	    public void handleMessage(Message msg) {
+
 	        switch (msg.what) {
 	        case UdpConstant.UdpSending://正在发送数据
 	            Toast.makeText(getApplicationContext(), "正在发送数据:" + (String) msg.obj, 2000).show(); // 展示接收到的字符串
+	            setBiaoZhi(UdpConstant.UdpSending);
+	    		getBiaoZhi();
 	            break;
 	        case UdpConstant.ReceiveResultOk://数据发送成功（在接收函数中检查）
 	            Toast.makeText(getApplicationContext(), "数据发送[成功]!", 2000).show(); // 展示接收到的字符串
+	            setBiaoZhi(UdpConstant.ReceiveResultOk);
+	    		getBiaoZhi();
 	            break;
 	        case UdpConstant.ReceiveResultNull://数据发送失败（在接收函数中检查）
 	            Toast.makeText(getApplicationContext(), "数据发送[失败]!", 2000).show(); // 展示接收到的字符串
+	            setBiaoZhi(UdpConstant.ReceiveResultNull);
+	    		getBiaoZhi();
 	            break;
 	        case UdpConstant.ReceiveResultTimeOut://数据接收超时（在接收函数中检查）
 	            Toast.makeText(getApplicationContext(), "接收数据超时，无法判断信息是否发送成功！", 2000).show(); // 展示接收到的字符串
+	            setBiaoZhi(UdpConstant.ReceiveResultTimeOut);
+	    		getBiaoZhi();
 	            break;
 	        default:
 	        	Toast.makeText(getApplicationContext(), "存在其他错误，请检查！", 2000).show(); // 展示接收到的字符串
+	        	setBiaoZhi(UdpConstant.ReceiveResultOther);
+	    		getBiaoZhi();
 	            break;
 	        }
+	        
 	        super.handleMessage(msg);
 	    }
 	};

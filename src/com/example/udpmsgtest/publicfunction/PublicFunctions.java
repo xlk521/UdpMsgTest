@@ -3,8 +3,14 @@ package com.example.udpmsgtest.publicfunction;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.SimpleTimeZone;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+import com.example.udpmsgtest.basestation.BaseStationFunction.SCell;
 import android.content.Context;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -16,28 +22,6 @@ public class PublicFunctions {
 	/*author:DerekXie
 	 * 函数定义：获取当前手机的ip地址，如果没有，则返回null
 	 * 参数定义：无参数
-	 * */
-	public String getPhoneIP(){
-		String ipAddress = null;
-		try {
-	        for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
-	            NetworkInterface intf = en.nextElement();
-	            for (Enumeration<InetAddress> enumIpAddr = intf.getInetAddresses(); enumIpAddr.hasMoreElements();) {
-	                InetAddress inetAddress = enumIpAddr.nextElement();
-	                if (!inetAddress.isLoopbackAddress()) {
-	                	ipAddress = inetAddress.getHostAddress().toString();
-	                	Log.i(TAG, "getPhoneIP;info;text: "+ipAddress);
-	                    return ipAddress;
-	                }
-	            }
-	        }
-	    } catch (SocketException ex) {
-	        Log.e(TAG, "getPhoneIP;error;text: "+ex.toString());
-	    }
-		return ipAddress;
-	}
-	/*
-	 * 与上面的功能相同，等待查找上面功能为啥不可用
 	 * */
     public static String getIp(){
         String localip=null;
@@ -91,4 +75,5 @@ public class PublicFunctions {
 //		return imei;
 		return "xlk123";
 	}
+
 }

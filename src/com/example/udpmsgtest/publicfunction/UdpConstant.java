@@ -20,5 +20,10 @@ public class UdpConstant {
 	public static final String returnResoutNull = "N";//#返回空数据标识"WordNull"
 	public static final String returnResoutError = "E";//#返回数据包错误数据标识“UDPPackagesError”
 	
-	//
+	//关闭加载条
+	public static final String closeProgress = "closeProgress";
+	//无法获取手机当前的ip地址
+	public static final int getPhoneIp = 4;
+	//选择TCP或者是UDP发送模式
+	public static final boolean isTcpOrUdp = false;//标识UDP发送模式
 }
