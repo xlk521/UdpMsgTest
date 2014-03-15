@@ -11,7 +11,7 @@ import java.net.UnknownHostException;
 import java.util.Arrays;
 
 import com.example.udpmsgtest.BaseActivity;
-import com.example.udpmsgtest.MainActivity;
+import com.example.udpmsgtest.basestation.activity.MainActivity;
 import com.example.udpmsgtest.publicfunction.Constant;
 import com.example.udpmsgtest.publicfunction.PublicFunctions;
 import com.example.udpmsgtest.publicfunction.UdpConstant;

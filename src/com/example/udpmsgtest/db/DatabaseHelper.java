@@ -6,8 +6,14 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import com.example.udpmsgtest.entity.GpsEntity;
-import com.example.udpmsgtest.entity.TkyDbTest;
+import com.example.udpmsgtest.login.entity.BureauEntity;
+import com.example.udpmsgtest.login.entity.CrewEntity;
+import com.example.udpmsgtest.login.entity.DeptEntity;
+import com.example.udpmsgtest.login.entity.GroupEntity;
+import com.example.udpmsgtest.login.entity.TeamEntity;
+import com.example.udpmsgtest.login.entity.TrainLeaderTime;
 import com.example.udpmsgtest.publicfunction.Constant;
+import com.example.udpmsgtest.wenjian.entity.TkyDbTest;
 import com.j256.ormlite.android.apptools.OrmLiteSqliteOpenHelper;
 import com.j256.ormlite.dao.Dao;
 import com.j256.ormlite.support.ConnectionSource;
@@ -44,6 +50,12 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		try {
 			TableUtils.createTable(connectionSource, TkyDbTest.class);
 			TableUtils.createTable(connectionSource, GpsEntity.class);
+			TableUtils.createTable(connectionSource, BureauEntity.class);
+			TableUtils.createTable(connectionSource, CrewEntity.class);
+			TableUtils.createTable(connectionSource, DeptEntity.class);
+			TableUtils.createTable(connectionSource, GroupEntity.class);
+			TableUtils.createTable(connectionSource, TeamEntity.class);
+			TableUtils.createTable(connectionSource, TrainLeaderTime.class);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -59,13 +71,15 @@ public class DatabaseHelper extends OrmLiteSqliteOpenHelper {
 		 *	dao.executeRaw("ALTER TABLE `account` ADD COLUMN age INTEGER;");
 		 */
 		
-//		try {
-//			//2014-02-07
-//			TableUtils.createTable(connectionSource, GpsEntity.class);
-//		} catch (SQLException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
+		try {
+			TableUtils.createTable(connectionSource, CrewEntity.class);
+			TableUtils.createTable(connectionSource, DeptEntity.class);
+			TableUtils.createTable(connectionSource, GroupEntity.class);
+			TableUtils.createTable(connectionSource, TeamEntity.class);
+			TableUtils.createTable(connectionSource, TrainLeaderTime.class);
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override

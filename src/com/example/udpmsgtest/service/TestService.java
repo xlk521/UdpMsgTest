@@ -12,7 +12,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.util.Arrays;
 
-import com.example.udpmsgtest.MainActivity;
+import com.example.udpmsgtest.basestation.activity.MainActivity;
 import com.example.udpmsgtest.publicfunction.Constant;
 import com.example.udpmsgtest.publicfunction.PublicFunctions;
 import com.example.udpmsgtest.publicfunction.Tools;

@@ -5,9 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.example.udpmsgtest.BaseDao;
-import com.example.udpmsgtest.BaseEntity;
+import com.example.udpmsgtest.dao.BaseDao;
 import com.example.udpmsgtest.db.DatabaseHelper;
+import com.example.udpmsgtest.entity.BaseEntity;
 import com.example.udpmsgtest.publicfunction.Constant;
 
 import android.content.ContentValues;

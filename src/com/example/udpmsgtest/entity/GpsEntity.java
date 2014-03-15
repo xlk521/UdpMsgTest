@@ -1,6 +1,5 @@
 package com.example.udpmsgtest.entity;
 
-import com.example.udpmsgtest.BaseEntity;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class Constant {
 	//数据库信息
 	public static String DB_NAME = "tkyDB.db";
-	public static String DB_FOLDER_PATH = android.os.Environment.getExternalStorageDirectory().getAbsolutePath() + "/kyd/";
+	public static String DB_FOLDER_PATH = android.os.Environment.getExternalStorageDirectory().getAbsolutePath() + "/xlk/";
 	public static String DB_PATH = DB_FOLDER_PATH + DB_NAME;
 	public final static int DB_VERSION = 2;
 	public static String INITFILEBASEPATH = "KydUpLoad";
